@@ -82,7 +82,7 @@ graph LR
 1. **Clone & Setup**
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/document-processing-service.git
+git clone https://github.com/arashghezavati/Document-Vectorization-Service.git
 cd document-processing-service
 
 # Create virtual environment
