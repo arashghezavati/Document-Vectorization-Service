@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 from chunking import chunk_text
 from embedding_function import GeminiEmbeddingFunction
 from unstructured.partition.auto import partition
-import markdown
 
 def extract_text_from_json(file_path):
     """Extract text from JSON file."""

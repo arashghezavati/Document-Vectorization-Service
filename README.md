@@ -1,6 +1,6 @@
 # Document Processing Service
 
-A lightweight Python service that processes documents (PDF, DOCX, TXT, HTML, JSON, XML, Markdown) and makes them searchable using AI-powered vector embeddings. Built with ChromaDB for efficient vector storage and retrieval.
+A lightweight Python service that processes documents (PDF, DOCX, TXT, HTML) and makes them searchable using AI-powered vector embeddings. Built with ChromaDB for efficient vector storage and retrieval.
 
 ## Why Vector Document Storage?
 
@@ -44,9 +44,6 @@ graph LR
 - Detects document format automatically
 - Uses specialized extractors for each format:
   - PDF/DOCX/TXT/HTML: Unstructured library
-  - JSON: JSON parser with formatting
-  - XML: XML parser with text extraction
-  - Markdown: Direct text extraction
 
 #### Step 2: Text Chunking
 - Splits text into optimal segments
@@ -74,7 +71,7 @@ graph LR
 
 ## Features
 
-- 📝 **Multi-Format Support**: PDF, DOCX, TXT, HTML, JSON, XML, Markdown
+- 📝 **Multi-Format Support**: PDF, DOCX, TXT, HTML
 - 🔍 **Smart Search**: AI-powered semantic search
 - 💾 **Efficient Storage**: Vector database storage using ChromaDB
 - 🔄 **Easy Processing**: Simple command-line interface
