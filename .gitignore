@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+
+# Environment variables
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# Vector database
+vector-database/store/*
+!vector-database/store/.gitkeep
+
+# Document storage
+docs/*
+!docs/.gitkeep
+
+# Logs
+*.log

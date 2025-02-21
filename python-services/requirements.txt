@@ -1,0 +1,10 @@
+# Core dependencies
+chromadb==0.4.24          # Vector database for storing embeddings
+google-generativeai==0.3.2 # Gemini AI for embeddings
+python-dotenv==1.0.1      # Environment variable management
+
+# Document processing
+unstructured[all-docs]==0.12.3  # Unified document processing (PDF, DOCX, TXT, etc.)
+
+# Required by dependencies
+numpy==1.26.4            # Required by ChromaDB
