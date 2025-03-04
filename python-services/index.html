@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+        }
+        h2 {
+            text-align: center;
+        }
+        .chat-container {
+            border: 1px solid #ccc;
+            padding: 15px;
+            height: 500px; /* Increased height */
+            max-height: 70vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            word-wrap: break-word;
+        }
+        .message {
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 100%;
+        }
+        .user {
+            background: #007bff;
+            color: white;
+            align-self: flex-end;
+        }
+        .bot {
+            background: #f1f1f1;
+            align-self: flex-start;
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Chatbot</h2>
+    <div class="chat-container" id="chat-container"></div>
+    <input type="text" id="customer_id" placeholder="Enter customer ID" value="customer_123">
+    <input type="text" id="query" placeholder="Type your message...">
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        async function sendMessage() {
+            const query = document.getElementById("query").value;
+            const customer_id = document.getElementById("customer_id").value;
+            if (!query.trim()) return;
+
+            const chatContainer = document.getElementById("chat-container");
+
+            // Append user message
+            const userMessage = document.createElement("div");
+            userMessage.className = "message user";
+            userMessage.textContent = query;
+            chatContainer.appendChild(userMessage);
+
+            document.getElementById("query").value = ""; // Clear input
+
+            try {
+                const response = await fetch("http://localhost:8000/chat", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        query,
+                        customer_id,
+                        mode: "strict"
+                    })
+                });
+
+                const data = await response.json();
+
+                // Append bot response
+                const botMessage = document.createElement("div");
+                botMessage.className = "message bot";
+                botMessage.innerHTML = data.response.replace(/\n/g, "<br>"); // Format new lines
+                chatContainer.appendChild(botMessage);
+
+                // Scroll to bottom
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            } catch (error) {
+                console.error("Error:", error);
+            }
+        }
+    </script>
+
+</body>
+</html>

@@ -1,37 +1,25 @@
-# Document Processing Service
+# Document Processing & AI Chatbot Service
 
-A lightweight Python service that processes documents (PDF, DOCX, TXT, HTML) and makes them searchable using AI-powered vector embeddings. Built with ChromaDB for efficient vector storage and retrieval.
+A powerful Python service that processes documents (PDF, DOCX, TXT, HTML) and makes them searchable and interactive using AI-powered vector embeddings. Built with ChromaDB for efficient vector storage and retrieval, and Google Gemini AI for intelligent response generation.
 
-## Why Vector Document Storage?
+Now includes a simple chatbot UI to interact with the AI system directly in the browser.
 
-### The Problem
-Traditional document storage and search systems have limitations:
-- Keyword-based search misses semantic meaning
-- Different document formats require different handling
-- Difficult to find related content without exact matches
-- Not optimized for AI applications
+## 🚀 Features & Benefits
 
-### The Solution: Vector Document Storage
-This service converts documents into vector embeddings, which:
-1. **Captures Semantic Meaning**: Understands the actual meaning of content, not just keywords
-2. **Format Agnostic**: Handles any text-based format uniformly
-3. **AI-Ready**: Perfect for:
-   - Semantic search
-   - Document similarity matching
-   - Question answering systems
-   - Content recommendation
-   - Automated document analysis
+### 📖 AI-Powered Document Search
+- Converts documents into vector embeddings for deep search.
+- Stores and retrieves context-aware information using ChromaDB.
+- Supports PDF, DOCX, TXT, HTML, and more.
 
-### Benefits
-- **Better Search Results**: Find relevant documents even when keywords don't match
-- **Unified Processing**: One system for all document types
-- **AI Integration**: Ready for modern AI applications
-- **Scalable**: Efficient storage and retrieval with ChromaDB
-- **Future-Proof**: Easy to upgrade embedding models as AI advances
+### 🤖 AI Chatbot (New)
+- Interactive Chatbot UI – Ask AI about stored business data.
+- Customer-Specific Responses – Query business info, customers, and products.
+- Strict & Comprehensive Search – Get exact document matches or AI-enhanced responses.
+- CORS-enabled API – Works seamlessly with frontend and Postman.
 
-## How It Works
+## 🔹 How It Works
 
-### 1. Document Processing Pipeline
+### 1️⃣ Document Processing & Storage
 ```mermaid
 graph LR
     A[Input Document] --> B[Text Extraction]
@@ -39,146 +27,139 @@ graph LR
     C --> D[Vector Embedding]
     D --> E[ChromaDB Storage]
 ```
+- Extracts text from PDFs, DOCX, TXT, and HTML.
+- Splits text into manageable chunks.
+- Embeds text using Google Gemini AI.
+- Stores vectors in ChromaDB for fast retrieval.
 
-#### Step 1: Text Extraction
-- Detects document format automatically
-- Uses specialized extractors for each format:
-  - PDF/DOCX/TXT/HTML: Unstructured library
-
-#### Step 2: Text Chunking
-- Splits text into optimal segments
-- Maintains context and readability
-- Ensures chunks fit embedding model limits
-
-#### Step 3: Vector Embedding
-- Converts text chunks to numerical vectors
-- Uses AI to capture semantic meaning
-- Normalizes vectors for consistent comparison
-
-#### Step 4: Storage
-- Stores vectors in ChromaDB
-- Organizes by collections
-- Maintains efficient index for fast retrieval
-
-### 2. Search and Retrieval
+### 2️⃣ AI Chatbot Interaction
 ```mermaid
 graph LR
-    A[Search Query] --> B[Query Embedding]
-    B --> C[Vector Search]
-    C --> D[Results Ranking]
-    D --> E[Return Results]
+    A[User Query] --> B[Retrieve Documents]
+    B --> C[Vector Search in ChromaDB]
+    C --> D[Construct AI Prompt]
+    D --> E[Google Gemini AI Response]
+    E --> F[Chatbot UI]
 ```
+- Accepts customer-specific queries.
+- Searches stored knowledge for relevant data.
+- Uses Google Gemini AI to generate responses.
 
-## Features
+## ⚡ Quick Start Guide
 
-- 📝 **Multi-Format Support**: PDF, DOCX, TXT, HTML
-- 🔍 **Smart Search**: AI-powered semantic search
-- 💾 **Efficient Storage**: Vector database storage using ChromaDB
-- 🔄 **Easy Processing**: Simple command-line interface
-- 📚 **Collection Based**: Organize documents in collections
-
-## Quick Start
-
-1. **Clone & Setup**
-```bash
-# Clone repository
+### 1️⃣ Clone & Setup
+```sh
+# Clone the repository
 git clone https://github.com/arashghezavati/Document-Vectorization-Service.git
-cd document-processing-service
+cd Document-Vectorization-Service
 
-# Create virtual environment
+# Create a virtual environment
 python -m venv venv
-.\venv\Scripts\activate  # Windows
-source venv/bin/activate # Linux/Mac
+source venv/bin/activate  # Linux/Mac
+.\venv\Scripts\activate   # Windows
 
 # Install dependencies
-cd python-services
-pip install -r requirements.txt
+pip install -r python-services/requirements.txt
 ```
 
-2. **Configure**
-Create `.env` in root directory:
-```env
+### 2️⃣ Configure API Keys
+Create a `.env` file in the root directory with the following content:
+```
 GOOGLE_GEMINI_API_KEY=your_api_key_here
+GEMINI_MODEL=gemini-2.0-flash
+CHROMA_DB_DIR=vector-database/store
 ```
 
-3. **Process Documents**
-```bash
-# Basic usage
-python process_document.py ../docs/your-file.pdf collection_name
+### 3️⃣ Process Documents
+Process text documents and store them in ChromaDB:
+```sh
+# Navigate to the python-services directory
+cd python-services
 
-# Examples
-python process_document.py ../docs/report.pdf reports
-python process_document.py ../docs/notes.txt notes
-python process_document.py ../docs/page.html web_docs
+# Process documents with a customer ID (e.g., customer_123)
+python process_document.py ../docs/business_info.txt customer_123
+python process_document.py ../docs/product_catalog.txt customer_123
+python process_document.py ../docs/customer_list.txt customer_123
 ```
 
-4. **Search Documents**
-```bash
-# Basic search
-python query_documents.py "your search query" collection_name
+### 4️⃣ Start the AI Chatbot API
+Run the FastAPI backend to enable chatbot functionality:
+```sh
+# Make sure you're in the python-services directory
+cd python-services
 
-# Example
-python query_documents.py "Find information about project budgets" reports
+# Start the API server
+python -m uvicorn chatbot_api:app --reload --host 0.0.0.0 --port 8000
 ```
 
-## Project Structure
+- Backend URL: http://localhost:8000
+- API Docs: http://localhost:8000/docs
 
+### 5️⃣ Open the Chatbot UI
+- Open `python-services/index.html` in your browser.
+- Enter a customer ID (default: customer_123).
+- Type a query (e.g., "Tell me about our recent product").
+- Click Send to interact with the AI-powered chatbot.
+
+## 🔹 Examples of Chatbot Queries
+
+| User Query | AI Response Example |
+|------------|---------------------|
+| "Explain our business to new customers in an email" | Subject: EcoTech Solutions - Sustainable Energy 🌱 |
+| "Send an email to all customers about our latest product" | Product Update: Introducing SolarX 2.0 ☀️ |
+| "What is the email of Lisa?" | Lisa Carter: lisa.carter@example.com 📧 |
+
+## 📂 Project Structure
 ```
 .
-├── docs/                    # Document storage
+├── docs/                    # Sample business-related documents
 ├── python-services/
-│   ├── process_document.py # Main processing script
-│   ├── extraction.py      # Text extraction
-│   ├── chunking.py       # Text chunking
-│   ├── embedding_function.py # AI embeddings
-│   └── query_documents.py  # Search interface
-└── vector-database/        # ChromaDB storage
+│   ├── chatbot_api.py       # FastAPI chatbot API
+│   ├── process_document.py  # Processes & stores documents
+│   ├── query_documents.py   # AI-powered document search
+│   ├── chunking.py          # Splits text into chunks
+│   ├── embedding_function.py # AI vector embedding
+│   ├── extraction.py        # Extracts text from files
+│   ├── requirements.txt     # Python dependencies
+│   ├── index.html           # Chatbot UI frontend
+├── .env                     # API keys & config (in root directory)
+├── vector-database/         # ChromaDB storage
 ```
 
-## Use Cases
-
-1. **Enterprise Document Management**
-   - Semantic search across all company documents
-   - Find related documents automatically
-   - Extract insights from document collections
-
-2. **Content Management Systems**
-   - Smart content recommendations
-   - Related article suggestions
-   - Content categorization
-
-3. **Research and Analysis**
-   - Find related research papers
-   - Cross-reference documents
-   - Identify patterns across documents
-
-4. **Customer Support**
-   - Quick access to relevant documentation
-   - Automated answer suggestion
-   - Knowledge base enhancement
-
-## Requirements
-
+## 🔧 Requirements
 - Python 3.9+
-- Dependencies listed in `requirements.txt`
-- API key for embedding model
+- ChromaDB (pip install chromadb)
+- Google Gemini API Key
+- FastAPI & Uvicorn (pip install fastapi uvicorn)
 
-## Contributing
+## 🔄 Contributing
+- ✅ Fork the repository
+- ✅ Create a feature branch
+- ✅ Commit your changes
+- ✅ Push & open a Pull Request
 
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
-
-## Support
-
+## 📩 Support
 Open an issue if you:
-- Found a bug
-- Want a new feature
-- Need help using the service
-- Want to add support for new formats
+- Encounter a bug 🐞
+- Want a new feature 🚀
+- Need help using the chatbot 🤖
 
-## License
+## 📜 License
+MIT License – Feel free to use and modify! 🎉
 
-MIT License - feel free to use in your own projects!
+## 🎯 What's New?
+- ✅ Chatbot UI for direct interaction (no Postman needed).
+- ✅ CORS-enabled API to support web frontends.
+- ✅ Improved AI responses using Google Gemini.
+- ✅ Three structured documents to simulate real-world business cases.
+
+## 🔍 Troubleshooting
+- If you encounter issues with the virtual environment, try creating a new one:
+  ```sh
+  python -m venv venv_new
+  .\venv_new\Scripts\activate  # Windows
+  source venv_new/bin/activate  # Linux/Mac
+  pip install -r python-services/requirements.txt
+  ```
+- Make sure your `.env` file is in the root directory of the project.
+- Check that the Google Gemini API key is valid and has sufficient quota.
