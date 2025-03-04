@@ -76,7 +76,7 @@
             border-right: 1px solid #eee;
         }
         
-        .customer-section {
+        .customer-section, .upload-section {
             margin-bottom: 25px;
         }
         
@@ -99,6 +99,76 @@
             border-radius: 6px;
             font-size: 14px;
             margin-bottom: 10px;
+        }
+        
+        .file-input-container {
+            position: relative;
+            margin-bottom: 10px;
+        }
+        
+        .file-input {
+            position: absolute;
+            left: -9999px;
+        }
+        
+        .file-input-label {
+            display: inline-block;
+            padding: 10px 15px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .file-input-label:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .file-name {
+            display: inline-block;
+            margin-left: 10px;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .upload-button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .upload-button:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .upload-message {
+            margin-top: 10px;
+            font-size: 13px;
+            padding: 10px;
+            border-radius: 6px;
+            display: none;
+        }
+        
+        .upload-message.success {
+            display: block;
+            background-color: rgba(46, 204, 113, 0.1);
+            color: var(--secondary-color);
+            border: 1px solid rgba(46, 204, 113, 0.3);
+        }
+        
+        .upload-message.error {
+            display: block;
+            background-color: rgba(231, 76, 60, 0.1);
+            color: #e74c3c;
+            border: 1px solid rgba(231, 76, 60, 0.3);
         }
         
         .quick-questions {
@@ -316,13 +386,36 @@
         <div class="sidebar">
             <div class="customer-section">
                 <div class="section-title">
-                    <i class="fas fa-user-circle"></i> Customer Profile
+                    <i class="fas fa-folder-open"></i> Document Category
                 </div>
                 <select id="customer_id">
-                    <option value="customer_123" selected>EcoTech Solutions (customer_123)</option>
-                    <option value="customer_456">Green Energy Corp</option>
-                    <option value="customer_789">Sustainable Living Co.</option>
+                    <option value="all" selected>All Documents</option>
+                    <option value="business_info">Business Information</option>
+                    <option value="customer_data">Customer Data</option>
+                    <option value="recent_products">Recent Products</option>
                 </select>
+            </div>
+            
+            <div class="upload-section">
+                <div class="section-title">
+                    <i class="fas fa-upload"></i> Upload Document
+                </div>
+                <div class="upload-form">
+                    <div class="file-input-container">
+                        <label for="document-file" class="file-input-label">
+                            <i class="fas fa-file-upload"></i> Select File
+                        </label>
+                        <input type="file" id="document-file" class="file-input" accept=".pdf,.docx,.txt,.html">
+                        <span id="file-name" class="file-name">No file selected</span>
+                    </div>
+                    <div class="collection-input">
+                        <input type="text" id="collection-name" placeholder="Collection Name" class="collection-name-input">
+                    </div>
+                    <button id="upload-btn" class="upload-button" onclick="uploadDocument()">
+                        <i class="fas fa-cloud-upload-alt"></i> Process Document
+                    </button>
+                </div>
+                <div id="upload-message" class="upload-message"></div>
             </div>
 
             <div class="quick-questions">
@@ -366,6 +459,102 @@
     <script>
         let currentMode = 'strict';
         let isTyping = false;
+        
+        // Initialize: Fetch collections on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchCollections();
+            
+            // Update file name when file is selected
+            document.getElementById('document-file').addEventListener('change', function() {
+                const fileName = this.files[0] ? this.files[0].name : 'No file selected';
+                document.getElementById('file-name').textContent = fileName;
+            });
+        });
+        
+        async function fetchCollections() {
+            try {
+                const response = await fetch("http://localhost:8000/collections");
+                const data = await response.json();
+                updateCollectionDropdown(data.collections);
+            } catch (error) {
+                console.error("Error fetching collections:", error);
+            }
+        }
+        
+        function updateCollectionDropdown(collections) {
+            const dropdown = document.getElementById('customer_id');
+            
+            // Keep the "All Documents" option
+            dropdown.innerHTML = '<option value="all" selected>All Documents</option>';
+            
+            // Add all collections
+            collections.forEach(collection => {
+                // Format the display name to be more user-friendly
+                let displayName = collection
+                    .replace(/_/g, ' ')
+                    .replace(/\b\w/g, l => l.toUpperCase());
+                
+                dropdown.innerHTML += `<option value="${collection}">${displayName}</option>`;
+            });
+        }
+        
+        async function uploadDocument() {
+            const fileInput = document.getElementById('document-file');
+            const collectionName = document.getElementById('collection-name').value.trim();
+            const messageDiv = document.getElementById('upload-message');
+            
+            // Validate input
+            if (!fileInput.files[0]) {
+                messageDiv.className = 'upload-message error';
+                messageDiv.textContent = 'Please select a file to upload';
+                return;
+            }
+            
+            if (!collectionName) {
+                messageDiv.className = 'upload-message error';
+                messageDiv.textContent = 'Please enter a collection name';
+                return;
+            }
+            
+            // Create form data
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('collection_name', collectionName);
+            
+            try {
+                // Show loading message
+                messageDiv.className = 'upload-message success';
+                messageDiv.textContent = 'Processing document...';
+                
+                // Upload file
+                const response = await fetch('http://localhost:8000/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    messageDiv.className = 'upload-message success';
+                    messageDiv.textContent = result.message;
+                    
+                    // Refresh collections dropdown
+                    fetchCollections();
+                    
+                    // Clear form
+                    fileInput.value = '';
+                    document.getElementById('collection-name').value = '';
+                    document.getElementById('file-name').textContent = 'No file selected';
+                } else {
+                    messageDiv.className = 'upload-message error';
+                    messageDiv.textContent = result.message;
+                }
+            } catch (error) {
+                messageDiv.className = 'upload-message error';
+                messageDiv.textContent = 'Error uploading document: ' + error.message;
+                console.error("Error:", error);
+            }
+        }
         
         function useQuestion(question) {
             document.getElementById('query').value = question;
