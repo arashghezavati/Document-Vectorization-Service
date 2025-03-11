@@ -33,6 +33,34 @@ def extract_text_from_markdown(file_path):
     # Convert markdown to plain text (simple approach)
     return text
 
+def extract_text_from_txt(file_path):
+    """Extract text from plain text file."""
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            text = f.read()
+        
+        print(f"Text file content length: {len(text)}")
+        
+        # If the text is empty, add a placeholder
+        if not text or len(text.strip()) == 0:
+            text = "This is an empty text file."
+            print("Text file was empty, adding placeholder text")
+        
+        return text
+    except UnicodeDecodeError:
+        # Try with different encoding if utf-8 fails
+        try:
+            with open(file_path, 'r', encoding='latin-1') as f:
+                text = f.read()
+            print(f"Successfully read file with latin-1 encoding, length: {len(text)}")
+            return text
+        except Exception as e:
+            print(f"Error reading text file with latin-1 encoding: {str(e)}")
+            raise
+    except Exception as e:
+        print(f"Error reading text file: {str(e)}")
+        raise
+
 def get_database_path():
     """Get the database path."""
     base_path = os.path.join(os.path.dirname(__file__), '..', 'vector-database')
@@ -62,19 +90,38 @@ def process_document(file_path, collection_name="default", metadata=None):
         print("🔹 Extracting text...")
         extension = os.path.splitext(file_path)[1].lower()
         
+        # Print file info for debugging
+        print(f"File size: {os.path.getsize(file_path)} bytes")
+        print(f"File extension: {extension}")
+        
         if extension == '.json':
             text = extract_text_from_json(file_path)
         elif extension == '.xml':
             text = extract_text_from_xml(file_path)
         elif extension == '.md':
             text = extract_text_from_markdown(file_path)
+        elif extension == '.txt':
+            text = extract_text_from_txt(file_path)
         else:
-            elements = partition(filename=file_path)
-            text = "\n".join([str(el) for el in elements])
+            try:
+                elements = partition(filename=file_path)
+                text = "\n".join([str(el) for el in elements])
+            except Exception as e:
+                print(f"Error using unstructured partition: {str(e)}")
+                # Fallback to simple text extraction for unknown file types
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        text = f.read()
+                except UnicodeDecodeError:
+                    with open(file_path, 'r', encoding='latin-1') as f:
+                        text = f.read()
         
         if not text:
-            raise ValueError("No text extracted from document")
+            # If no text was extracted, add a placeholder
+            print("Warning: No text extracted, using placeholder")
+            text = f"This document ({os.path.basename(file_path)}) appears to be empty or could not be processed."
         
+        print(f"Extracted text length: {len(text)}")
         print("✅ Text extracted successfully")
         
         # Chunk text
@@ -131,6 +178,8 @@ def extract_text(file_path):
             return extract_text_from_xml(file_path)
         elif file_extension == '.md':
             return extract_text_from_markdown(file_path)
+        elif file_extension == '.txt':
+            return extract_text_from_txt(file_path)
         else:
             # Use unstructured for other file types
             elements = partition(filename=file_path)

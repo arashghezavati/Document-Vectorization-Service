@@ -238,6 +238,75 @@ async def upload_document(
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+@app.post("/upload-multiple")
+async def upload_multiple_documents(
+    files: List[UploadFile] = File(...),
+    folder_name: Optional[str] = Form(None),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Upload and process multiple documents into a user's collection
+    """
+    results = []
+    
+    try:
+        # Validate folder if provided
+        if folder_name and folder_name not in get_user_folders(current_user.username):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Folder '{folder_name}' does not exist"
+            )
+        
+        # Process each file
+        for file in files:
+            try:
+                # Create temp file
+                temp_dir = tempfile.mkdtemp()
+                temp_file_path = os.path.join(temp_dir, file.filename)
+                
+                # Save uploaded file
+                with open(temp_file_path, "wb") as buffer:
+                    shutil.copyfileobj(file.file, buffer)
+                
+                # Process the document with user-specific collection
+                collection_name = get_user_collection_name(current_user.username)
+                
+                # Add metadata for folder and document name
+                metadata = {
+                    "document_name": file.filename
+                }
+                if folder_name:
+                    metadata["folder_name"] = folder_name
+                    
+                # Process the document
+                process_document.process_document(
+                    temp_file_path, 
+                    collection_name, 
+                    metadata=metadata
+                )
+                
+                # Clean up
+                shutil.rmtree(temp_dir)
+                
+                results.append({
+                    "filename": file.filename,
+                    "status": "success",
+                    "message": f"Document {file.filename} successfully processed" + 
+                              (f" into folder {folder_name}" if folder_name else "")
+                })
+                
+            except Exception as e:
+                results.append({
+                    "filename": file.filename,
+                    "status": "error",
+                    "message": str(e)
+                })
+        
+        return {"results": results}
+    
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 @app.get("/documents")
 async def get_documents(
     folder_name: Optional[str] = None,
