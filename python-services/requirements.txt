@@ -4,7 +4,16 @@ google-generativeai==0.3.2 # Gemini AI for embeddings
 python-dotenv==1.0.1      # Environment variable management
 
 # Document processing
-unstructured[all-docs]==0.12.3  # Unified document processing (PDF, DOCX, TXT, etc.)
+unstructured>=0.10.0      # Unified document processing (PDF, DOCX, TXT, etc.)
 
 # Required by dependencies
 numpy==1.26.4            # Required by ChromaDB
+
+# Authentication and database
+pymongo==4.6.1           # MongoDB driver
+passlib==1.7.4           # Password hashing
+pyjwt==2.8.0             # JWT token handling
+python-multipart==0.0.6  # Form data parsing
+email-validator==2.1.0   # Email validation
+fastapi>=0.100.0         # API framework
+uvicorn>=0.22.0          # ASGI server

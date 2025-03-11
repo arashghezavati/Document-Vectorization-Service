@@ -85,6 +85,7 @@ cd python-services
 # Start the API server
 python -m uvicorn chatbot_api:app --reload --host 0.0.0.0 --port 8000
 ```
+python run_server.py
 
 - Backend URL: http://localhost:8000
 - API Docs: http://localhost:8000/docs

@@ -40,12 +40,13 @@ def get_database_path():
     os.makedirs(db_path, exist_ok=True)
     return db_path
 
-def process_document(file_path, collection_name="default"):
+def process_document(file_path, collection_name="default", metadata=None):
     """Process a document and store it in ChromaDB.
     
     Args:
         file_path (str): Path to the document to process
         collection_name (str): Name of the collection to store embeddings in.
+        metadata (dict, optional): Additional metadata to store with the document chunks.
     """
     print(f"🚀 Processing document: {file_path}")
     
@@ -96,9 +97,21 @@ def process_document(file_path, collection_name="default"):
         file_identifier = os.path.basename(file_path).replace(".", "_")  # Unique filename-based ID
         new_doc_ids = [f"{file_identifier}_doc_{i}" for i in range(len(chunks))]
         
+        # Prepare metadata for each chunk
+        if metadata is None:
+            metadata = {}
+            
+        # Add document name to metadata if not present
+        if "document_name" not in metadata:
+            metadata["document_name"] = os.path.basename(file_path)
+            
+        # Create metadata list for each chunk
+        metadatas = [metadata.copy() for _ in range(len(chunks))]
+        
         collection.add(
             documents=chunks,
-            ids=new_doc_ids
+            ids=new_doc_ids,
+            metadatas=metadatas
         )
         
         print(f"✅ Successfully added {len(new_doc_ids)} new chunks to ChromaDB")
