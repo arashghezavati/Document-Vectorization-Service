@@ -172,16 +172,19 @@ def process_document(file_path, collection_name="default", metadata=None):
         print(f"❌ Error processing document: {str(e)}")
         raise
 
-def process_url(url, collection_name="default", metadata=None):
-    """Process content from a URL and store it in ChromaDB.
+async def process_url(url, collection_name="default", metadata=None, follow_links=True, max_links=5):
+    """
+    Process a URL, fetch its content and store it in ChromaDB.
     
     Args:
         url (str): URL to process
-        collection_name (str): Name of the collection to store embeddings in
-        metadata (dict, optional): Additional metadata to store with the document chunks
+        collection_name (str): Name of the collection to store the document in
+        metadata (dict, optional): Additional metadata to store with the document
+        follow_links (bool): Whether to follow links within the page (one level deep)
+        max_links (int): Maximum number of links to follow
         
     Returns:
-        dict: Processing result information
+        dict: Information about the processed document
     """
     print(f"🚀 Processing URL: {url}")
     
@@ -195,7 +198,10 @@ def process_url(url, collection_name="default", metadata=None):
         
         # Fetch and process web content
         print("🔹 Fetching and extracting content...")
-        content, content_metadata, content_type = fetch_web_content(url)
+        from web_content_fetcher import fetch_web_content
+        
+        # Fetch content with link following if enabled
+        content, content_metadata, content_type = fetch_web_content(url, follow_links=follow_links, max_links=max_links)
         
         if not content:
             print("Warning: No content extracted, using placeholder")
@@ -256,38 +262,44 @@ def process_url(url, collection_name="default", metadata=None):
         
         return {
             "status": "success",
+            "document_id": url_hash,
             "url": url,
-            "document_name": merged_metadata["document_name"],
-            "chunks": len(chunks),
-            "content_type": content_type
+            "content_type": content_type,
+            "collection": collection_name,
+            "chunks": len(chunks)
         }
         
     except Exception as e:
-        error_msg = f"❌ Error processing URL: {str(e)}"
+        error_msg = f"Error processing URL {url}: {str(e)}"
         print(error_msg)
         return {
             "status": "error",
             "url": url,
-            "error": error_msg
+            "error": str(e)
         }
 
-async def process_urls_batch(urls, collection_name="default", metadata=None):
-    """Process multiple URLs in batch.
+async def process_urls_batch(urls, collection_name="default", metadata=None, follow_links=True, max_links=3):
+    """
+    Process multiple URLs in batch.
     
     Args:
         urls (list): List of URLs to process
-        collection_name (str): Name of the collection to store embeddings in
-        metadata (dict, optional): Additional metadata to store with the document chunks
+        collection_name (str): Name of the collection to store the documents in
+        metadata (dict, optional): Additional metadata to store with the documents
+        follow_links (bool): Whether to follow links within each page (one level deep)
+        max_links (int): Maximum number of links to follow per URL
         
     Returns:
-        list: List of processing results for each URL
+        list: Results for each URL
     """
     results = []
+    
     for url in urls:
         try:
-            result = process_url(url, collection_name, metadata)
+            result = await process_url(url, collection_name, metadata, follow_links, max_links)
             results.append(result)
         except Exception as e:
+            print(f"Error in batch processing for URL {url}: {str(e)}")
             results.append({
                 "status": "error",
                 "url": url,

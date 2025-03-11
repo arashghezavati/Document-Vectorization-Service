@@ -3,7 +3,6 @@ from chromadb.api.types import Documents, EmbeddingFunction
 from typing import List
 import numpy as np
 import os
-import hashlib
 from dotenv import load_dotenv
 
 # Load configuration from environment
@@ -33,41 +32,60 @@ class GeminiEmbeddingFunction(EmbeddingFunction):
         """
         embeddings = []
         
-        # Create a hash-based embedding function as fallback
-        def create_hash_based_embedding(text_input):
-            print("Using hash-based embedding")
-            hash_object = hashlib.sha256(text_input.encode())
-            hash_hex = hash_object.hexdigest()
-            # Use only the first 8 characters of the hex digest to ensure the seed is within range
-            hash_int = int(hash_hex[:8], 16)
-            np.random.seed(hash_int)
-            embedding = np.random.uniform(-1, 1, EMBEDDING_DIMENSION).tolist()
-            return embedding
-        
         for text in texts:
-            try:
-                # Use the proper embedding API
-                result = genai.embed_content(
-                    model=EMBEDDING_MODEL,
-                    content=text,
-                    task_type="retrieval_document"
-                )
-                
-                # Get the embedding values directly from the result
-                embedding = result["embedding"]["values"]
-                
-                # Ensure consistent size
-                if len(embedding) < EMBEDDING_DIMENSION:
-                    embedding.extend([0.0] * (EMBEDDING_DIMENSION - len(embedding)))
-                else:
-                    embedding = embedding[:EMBEDDING_DIMENSION]
-                
-                embeddings.append(embedding)
-                
-            except Exception as e:
-                print(f"Error getting embedding from Gemini: {e}")
-                print("Falling back to hash-based embedding")
-                embedding = create_hash_based_embedding(text)
-                embeddings.append(embedding)
+            # Limit text size to avoid payload size errors
+            if len(text) > 8000:
+                text = text[:8000]
+            
+            # Use the model name with 'models/' prefix as suggested by the error message
+            model_name = f"models/{EMBEDDING_MODEL}"
+            print(f"Using model: {model_name}")
+            
+            # Call the API to get embeddings
+            result = genai.embed_content(
+                model=model_name,
+                content=text,
+                task_type="retrieval_document"
+            )
+            
+            # Print the result structure to debug
+            print(f"API Response structure: {type(result)}")
+            
+            # Extract the embedding values based on the correct structure
+            # The structure might be different than expected, so we need to handle it properly
+            if hasattr(result, 'embedding'):
+                # If result is an object with embedding attribute
+                embedding = result.embedding
+            elif hasattr(result, 'embeddings'):
+                # If result has embeddings attribute
+                embedding = result.embeddings[0]
+            elif isinstance(result, dict):
+                # If result is a dictionary
+                if 'embedding' in result:
+                    embedding = result['embedding']
+                    if isinstance(embedding, dict) and 'values' in embedding:
+                        embedding = embedding['values']
+                elif 'embeddings' in result:
+                    embedding = result['embeddings'][0]
+            else:
+                # Try to convert to a list directly
+                embedding = list(result)
+            
+            # Convert to list if it's not already
+            if not isinstance(embedding, list):
+                embedding = list(embedding)
+            
+            # Ensure consistent size
+            if len(embedding) < EMBEDDING_DIMENSION:
+                embedding.extend([0.0] * (EMBEDDING_DIMENSION - len(embedding)))
+            else:
+                embedding = embedding[:EMBEDDING_DIMENSION]
+            
+            # Normalize the embedding to unit length (L2 norm)
+            norm = np.linalg.norm(embedding)
+            if norm > 0:  # Avoid division by zero
+                embedding = [x / norm for x in embedding]
+            
+            embeddings.append(embedding)
         
         return embeddings

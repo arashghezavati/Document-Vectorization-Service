@@ -59,10 +59,14 @@ class UrlProcessRequest(BaseModel):
     url: HttpUrl
     folder_name: Optional[str] = None
     document_name: Optional[str] = None
+    follow_links: bool = True
+    max_links: int = 5
 
 class BatchUrlProcessRequest(BaseModel):
     urls: List[HttpUrl]
     folder_name: Optional[str] = None
+    follow_links: bool = True
+    max_links: int = 3
 
 def get_user_collection_name(username: str):
     """
@@ -590,7 +594,9 @@ async def process_url_endpoint(
             process_document.process_url,
             str(request.url),
             collection_name,
-            metadata
+            metadata,
+            request.follow_links,
+            request.max_links
         )
         
         return {
@@ -639,7 +645,9 @@ async def process_urls_batch_endpoint(
             process_document.process_urls_batch,
             url_strings,
             collection_name,
-            metadata
+            metadata,
+            request.follow_links,
+            request.max_links
         )
         
         return {
