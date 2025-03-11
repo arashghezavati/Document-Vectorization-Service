@@ -393,3 +393,144 @@ async def chat(
     ai_response = call_ai_model(prompt)
 
     return {"response": ai_response}
+
+# Delete a document
+@app.delete("/documents/{document_name}")
+async def delete_document(document_name: str, current_user: User = Depends(get_current_user)):
+    try:
+        # Get user's collection with correct naming
+        collection_name = f"user_{current_user.username}_docs"
+        
+        # Debug print
+        print(f"Attempting to delete document: '{document_name}' from collection: '{collection_name}'")
+        
+        # Check if collection exists
+        try:
+            collection = chroma_client.get_collection(collection_name)
+        except Exception as e:
+            print(f"Error getting collection: {str(e)}")
+            raise HTTPException(status_code=404, detail="User collection not found")
+        
+        # Check if collection is empty
+        try:
+            documents = collection.get()
+            if not documents['ids']:
+                raise HTTPException(status_code=404, detail="No documents found in collection")
+        except Exception as e:
+            print(f"Error getting documents: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Error retrieving documents: {str(e)}")
+        
+        document_ids = documents['ids']
+        document_metadatas = documents['metadatas']
+        
+        # Debug print all document names
+        print(f"Available documents: {[meta.get('document_name', 'Unknown') for meta in document_metadatas]}")
+        
+        # Find the document by name
+        document_index = None
+        for i, metadata in enumerate(document_metadatas):
+            doc_name = metadata.get('document_name', '')
+            print(f"Comparing: '{doc_name}' with '{document_name}'")
+            if doc_name == document_name:
+                document_index = i
+                print(f"Match found at index {i}")
+                break
+        
+        if document_index is None:
+            raise HTTPException(status_code=404, detail=f"Document '{document_name}' not found")
+        
+        # Delete the document
+        document_id = document_ids[document_index]
+        print(f"Deleting document with ID: {document_id}")
+        collection.delete(ids=[document_id])
+        
+        return {"message": f"Document '{document_name}' deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error in delete_document: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete document: {str(e)}")
+
+# Delete a folder and all its documents
+@app.delete("/folders/{folder_name}")
+async def delete_folder(folder_name: str, current_user: User = Depends(get_current_user)):
+    try:
+        # Get user's collection with correct naming
+        collection_name = f"user_{current_user.username}_docs"
+        
+        print(f"Attempting to delete folder: '{folder_name}' for user: '{current_user.username}'")
+        
+        # First check if the folder exists in user's folders
+        user_folders = get_user_folders(current_user.username)
+        print(f"User folders: {user_folders}")
+        
+        if folder_name not in user_folders:
+            print(f"Folder '{folder_name}' not found in user's folders list")
+            # We'll continue anyway to clean up any documents that might be in this folder
+        
+        # Delete folder from MongoDB - use try/except to handle potential errors
+        try:
+            result = users_collection.update_one(
+                {"username": current_user.username},
+                {"$pull": {"folders": folder_name}}
+            )
+            print(f"MongoDB update result: {result.modified_count} documents modified")
+        except Exception as mongo_error:
+            print(f"Error updating MongoDB: {str(mongo_error)}")
+            # Continue with document deletion even if folder deletion fails
+        
+        # Now delete all documents in this folder from ChromaDB
+        try:
+            # Check if collection exists first
+            collections = chroma_client.list_collections()
+            collection_exists = False
+            for coll in collections:
+                if coll.name == collection_name:
+                    collection_exists = True
+                    break
+            
+            if not collection_exists:
+                print(f"Collection '{collection_name}' does not exist")
+                # If the collection doesn't exist, we can consider the folder deleted
+                return {"message": f"Folder '{folder_name}' deleted successfully (no collection found)"}
+            
+            collection = chroma_client.get_collection(collection_name)
+            
+            # Get all documents
+            documents = collection.get()
+            if not documents['ids'] or len(documents['ids']) == 0:
+                print("No documents found in collection")
+                return {"message": f"Folder '{folder_name}' deleted successfully (no documents found)"}
+            
+            document_ids = documents['ids']
+            document_metadatas = documents['metadatas']
+            
+            print(f"Found {len(document_ids)} documents in collection")
+            
+            # Find documents in the folder
+            documents_to_delete = []
+            for i, metadata in enumerate(document_metadatas):
+                folder = metadata.get('folder_name', '')
+                print(f"Document {i} folder: '{folder}'")
+                if folder == folder_name:
+                    documents_to_delete.append(document_ids[i])
+            
+            print(f"Found {len(documents_to_delete)} documents to delete in folder '{folder_name}'")
+            
+            # Delete documents in the folder
+            if documents_to_delete:
+                collection.delete(ids=documents_to_delete)
+                print(f"Deleted {len(documents_to_delete)} documents from folder '{folder_name}'")
+            
+        except Exception as chroma_error:
+            print(f"Error deleting documents from ChromaDB: {str(chroma_error)}")
+            # Continue with folder deletion even if document deletion fails
+        
+        return {"message": f"Folder '{folder_name}' and all its documents deleted successfully"}
+    except Exception as e:
+        print(f"Error in delete_folder: {str(e)}")
+        # Include the full error details in the response
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"Full error traceback: {error_details}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete folder: {str(e)}")
