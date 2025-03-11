@@ -6,6 +6,12 @@ python-dotenv==1.0.1      # Environment variable management
 # Document processing
 unstructured>=0.10.0      # Unified document processing (PDF, DOCX, TXT, etc.)
 
+# Web content processing
+requests==2.31.0          # HTTP requests library
+beautifulsoup4==4.12.2    # HTML parsing
+PyPDF2==3.0.1             # PDF processing for online PDFs
+lxml==4.9.3               # XML and HTML parser (used by BeautifulSoup)
+
 # Required by dependencies
 numpy==1.26.4            # Required by ChromaDB
 

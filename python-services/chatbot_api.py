@@ -4,10 +4,10 @@ import google.generativeai as genai
 import shutil
 import tempfile
 from dotenv import load_dotenv
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends, status
-from pydantic import BaseModel
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends, status, BackgroundTasks
+from pydantic import BaseModel, HttpUrl
 from fastapi.middleware.cors import CORSMiddleware
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import importlib.util
 
 # Import authentication module
@@ -54,6 +54,15 @@ class ChatRequest(BaseModel):
 
 class FolderCreate(BaseModel):
     folder_name: str
+
+class UrlProcessRequest(BaseModel):
+    url: HttpUrl
+    folder_name: Optional[str] = None
+    document_name: Optional[str] = None
+
+class BatchUrlProcessRequest(BaseModel):
+    urls: List[HttpUrl]
+    folder_name: Optional[str] = None
 
 def get_user_collection_name(username: str):
     """
@@ -545,3 +554,102 @@ async def delete_folder(folder_name: str, current_user: User = Depends(get_curre
         error_details = traceback.format_exc()
         print(f"Full error traceback: {error_details}")
         raise HTTPException(status_code=500, detail=f"Failed to delete folder: {str(e)}")
+
+@app.post("/process_url")
+async def process_url_endpoint(
+    request: UrlProcessRequest,
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Process a URL and add its content to the user's collection
+    """
+    try:
+        # Validate folder if provided
+        if request.folder_name and request.folder_name not in get_user_folders(current_user.username):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Folder '{request.folder_name}' does not exist"
+            )
+        
+        # Prepare metadata
+        metadata = {
+            "folder_name": request.folder_name if request.folder_name else "Uncategorized",
+            "source_type": "web"
+        }
+        
+        # Add document name if provided
+        if request.document_name:
+            metadata["document_name"] = request.document_name
+        
+        # Get user's collection name
+        collection_name = get_user_collection_name(current_user.username)
+        
+        # Process URL in background
+        background_tasks.add_task(
+            process_document.process_url,
+            str(request.url),
+            collection_name,
+            metadata
+        )
+        
+        return {
+            "status": "processing",
+            "message": f"URL {request.url} is being processed in the background",
+            "url": str(request.url)
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error processing URL: {str(e)}"
+        )
+
+@app.post("/process_urls_batch")
+async def process_urls_batch_endpoint(
+    request: BatchUrlProcessRequest,
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Process multiple URLs in batch and add their content to the user's collection
+    """
+    try:
+        # Validate folder if provided
+        if request.folder_name and request.folder_name not in get_user_folders(current_user.username):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Folder '{request.folder_name}' does not exist"
+            )
+        
+        # Prepare metadata
+        metadata = {
+            "folder_name": request.folder_name if request.folder_name else "Uncategorized",
+            "source_type": "web"
+        }
+        
+        # Get user's collection name
+        collection_name = get_user_collection_name(current_user.username)
+        
+        # Convert URLs to strings
+        url_strings = [str(url) for url in request.urls]
+        
+        # Process URLs in background
+        background_tasks.add_task(
+            process_document.process_urls_batch,
+            url_strings,
+            collection_name,
+            metadata
+        )
+        
+        return {
+            "status": "processing",
+            "message": f"Batch of {len(request.urls)} URLs is being processed in the background",
+            "urls_count": len(request.urls)
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error processing URLs batch: {str(e)}"
+        )

@@ -6,6 +6,10 @@ from dotenv import load_dotenv
 from chunking import chunk_text
 from embedding_function import GeminiEmbeddingFunction
 from unstructured.partition.auto import partition
+import asyncio
+import hashlib
+from urllib.parse import urlparse
+from web_content_fetcher import fetch_web_content, process_batch_urls
 
 def extract_text_from_json(file_path):
     """Extract text from JSON file."""
@@ -167,6 +171,130 @@ def process_document(file_path, collection_name="default", metadata=None):
     except Exception as e:
         print(f"❌ Error processing document: {str(e)}")
         raise
+
+def process_url(url, collection_name="default", metadata=None):
+    """Process content from a URL and store it in ChromaDB.
+    
+    Args:
+        url (str): URL to process
+        collection_name (str): Name of the collection to store embeddings in
+        metadata (dict, optional): Additional metadata to store with the document chunks
+        
+    Returns:
+        dict: Processing result information
+    """
+    print(f"🚀 Processing URL: {url}")
+    
+    try:
+        # Load environment variables
+        load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
+        api_key = os.getenv('GOOGLE_GEMINI_API_KEY')
+        
+        if not api_key:
+            raise ValueError("GOOGLE_GEMINI_API_KEY environment variable not set")
+        
+        # Fetch and process web content
+        print("🔹 Fetching and extracting content...")
+        content, content_metadata, content_type = fetch_web_content(url)
+        
+        if not content:
+            print("Warning: No content extracted, using placeholder")
+            content = f"This URL ({url}) appears to be empty or could not be processed."
+        
+        print(f"Extracted content length: {len(content)}")
+        print(f"Content type: {content_type}")
+        print("✅ Content extracted successfully")
+        
+        # Chunk text
+        print("🔹 Chunking content...")
+        chunks = chunk_text(content)
+        print(f"✅ Created {len(chunks)} chunks")
+        
+        # Initialize ChromaDB
+        print("🔹 Creating embeddings and storing in ChromaDB...")
+        db_path = get_database_path()
+        chroma_client = chromadb.PersistentClient(path=db_path)
+        
+        embedding_model = GeminiEmbeddingFunction(api_key=api_key)
+        collection = chroma_client.get_or_create_collection(
+            name=collection_name,
+            embedding_function=embedding_model
+        )
+        
+        # Generate unique document IDs by hashing the URL
+        url_hash = hashlib.md5(url.encode()).hexdigest()
+        new_doc_ids = [f"{url_hash}_doc_{i}" for i in range(len(chunks))]
+        
+        # Prepare metadata for each chunk
+        if metadata is None:
+            metadata = {}
+        
+        # Merge content metadata with provided metadata
+        merged_metadata = {**content_metadata, **metadata}
+        
+        # Add document name to metadata if not present
+        if "document_name" not in merged_metadata:
+            # Use the title from content metadata or fallback to domain name
+            document_name = content_metadata.get("title", urlparse(url).netloc)
+            merged_metadata["document_name"] = document_name
+            
+        # Add URL as source in metadata
+        merged_metadata["source"] = url
+        merged_metadata["source_type"] = "web"
+        
+        # Create metadata list for each chunk
+        metadatas = [merged_metadata.copy() for _ in range(len(chunks))]
+        
+        collection.add(
+            documents=chunks,
+            ids=new_doc_ids,
+            metadatas=metadatas
+        )
+        
+        print(f"✅ Successfully added {len(new_doc_ids)} new chunks to ChromaDB")
+        print("✅ URL processing complete!")
+        
+        return {
+            "status": "success",
+            "url": url,
+            "document_name": merged_metadata["document_name"],
+            "chunks": len(chunks),
+            "content_type": content_type
+        }
+        
+    except Exception as e:
+        error_msg = f"❌ Error processing URL: {str(e)}"
+        print(error_msg)
+        return {
+            "status": "error",
+            "url": url,
+            "error": error_msg
+        }
+
+async def process_urls_batch(urls, collection_name="default", metadata=None):
+    """Process multiple URLs in batch.
+    
+    Args:
+        urls (list): List of URLs to process
+        collection_name (str): Name of the collection to store embeddings in
+        metadata (dict, optional): Additional metadata to store with the document chunks
+        
+    Returns:
+        list: List of processing results for each URL
+    """
+    results = []
+    for url in urls:
+        try:
+            result = process_url(url, collection_name, metadata)
+            results.append(result)
+        except Exception as e:
+            results.append({
+                "status": "error",
+                "url": url,
+                "error": str(e)
+            })
+    
+    return results
 
 def extract_text(file_path):
     """Extract text from a document based on file type."""
