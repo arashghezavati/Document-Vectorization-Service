@@ -331,15 +331,26 @@ async def get_documents(
         else:
             results = collection.get(include=["metadatas"])
         
-        # Extract document names from metadata
+        # Extract document names from metadata and deduplicate
         documents = []
+        seen_documents = set()  # Track unique document names
+        
         if results and results["metadatas"]:
             for metadata in results["metadatas"]:
                 if "document_name" in metadata:
-                    documents.append({
-                        "name": metadata["document_name"],
-                        "folder": metadata.get("folder_name", None)
-                    })
+                    doc_name = metadata["document_name"]
+                    folder = metadata.get("folder_name", None)
+                    
+                    # Create a unique key for each document+folder combination
+                    doc_key = f"{doc_name}|{folder}"
+                    
+                    # Only add if we haven't seen this document before
+                    if doc_key not in seen_documents:
+                        seen_documents.add(doc_key)
+                        documents.append({
+                            "name": doc_name,
+                            "folder": folder
+                        })
         
         return {"documents": documents}
     except Exception as e:

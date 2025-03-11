@@ -162,6 +162,7 @@ def process_document(file_path, collection_name="default", metadata=None):
         )
         
         print(f"✅ Successfully added {len(new_doc_ids)} new chunks to ChromaDB")
+        print("✅ Document processing complete!")
         
     except Exception as e:
         print(f"❌ Error processing document: {str(e)}")
