@@ -4,13 +4,14 @@ import google.generativeai as genai
 import shutil
 import tempfile
 from dotenv import load_dotenv
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends, status, BackgroundTasks
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends, status, BackgroundTasks, Request
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, HttpUrl
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional, Dict, Any
 import importlib.util
-
-# Import authentication module
+import jwt
+import agent_workflow
 from auth import (
     User, UserCreate, Token, 
     authenticate_user, create_user, create_access_token,
@@ -22,7 +23,9 @@ from datetime import timedelta
 load_dotenv()
 GOOGLE_GEMINI_API_KEY = os.getenv("GOOGLE_GEMINI_API_KEY")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 1440  # Increase to 24 hours (1440 minutes)
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
 
 # Debugging: Check API Key and Model
 print("GOOGLE_GEMINI_API_KEY:", GOOGLE_GEMINI_API_KEY)
@@ -558,6 +561,100 @@ async def delete_folder(folder_name: str, current_user: User = Depends(get_curre
         error_details = traceback.format_exc()
         print(f"Full error traceback: {error_details}")
         raise HTTPException(status_code=500, detail=f"Failed to delete folder: {str(e)}")
+
+@app.post("/agent_task")
+async def agent_task(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Process a task using the agent workflow.
+    """
+    try:
+        # Log authentication success
+        print(f"✅ Successfully authenticated user: {current_user.username}")
+        
+        # Get the request data
+        data = await request.json()
+        task = data.get("task", "")
+        
+        # Validate the request
+        if not task:
+            return JSONResponse(
+                status_code=400,
+                content={"error": "Task is required"}
+            )
+        
+        # Use the authenticated user directly
+        user_id = current_user.username
+        
+        # Get the proper collection name for this user
+        user_collection = get_user_collection_name(user_id)
+        print(f"Processing task for authenticated user: {user_id} (Collection: {user_collection})")
+        
+        # Process the task
+        try:
+            messages = await process_task(task, user_id)
+            
+            # Return the messages
+            return JSONResponse(
+                status_code=200,
+                content={"messages": messages}
+            )
+        except Exception as e:
+            print(f"Error processing task: {str(e)}")
+            return JSONResponse(
+                status_code=500,
+                content={"error": f"Error processing task: {str(e)}"}
+            )
+    except Exception as e:
+        print(f"Error in agent_task endpoint: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Error in agent_task endpoint: {str(e)}"}
+        )
+
+async def process_task(task, user_id):
+    """
+    Process a task using the agent workflow.
+    """
+    try:
+        # Create the initial state
+        initial_state = {
+            "task": task,
+            "user_id": user_id,
+            "messages": [{"role": "user", "content": task}],
+            "documents": [],
+            "credentials": {}
+        }
+        
+        # Run the workflow
+        workflow = agent_workflow.create_agent_workflow()
+        final_state = workflow.invoke(initial_state)
+        
+        # Extract the messages
+        messages = final_state.get("messages", [])
+        
+        # Ensure we have at least one response message
+        if len(messages) <= 1:  # Only the user message
+            # Add a default response if no assistant messages
+            messages.append({
+                "role": "assistant",
+                "content": "I processed your task but couldn't generate a proper response. Please try again with more details."
+            })
+        
+        # Print for debugging
+        print(f"Returning {len(messages)} messages")
+        for i, msg in enumerate(messages):
+            print(f"Message {i}: {msg.get('role')} - {msg.get('content')[:50]}...")
+        
+        return messages
+    except Exception as e:
+        print(f"Error in process_task: {str(e)}")
+        return [
+            {"role": "user", "content": task},
+            {"role": "assistant", "content": f"Error processing task: {str(e)}"}
+        ]
 
 @app.post("/process_url")
 async def process_url_endpoint(
