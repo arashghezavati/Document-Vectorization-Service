@@ -89,33 +89,17 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        print(f"Attempting to decode token: {token[:10]}...")
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
         if username is None:
-            print("Token payload missing 'sub' field")
             raise credentials_exception
         token_data = TokenData(username=username)
-        print(f"Token successfully decoded for user: {username}")
-    except jwt.PyJWTError as e:
-        print(f"JWT decode error: {str(e)}")
+    except jwt.PyJWTError:
         raise credentials_exception
-    
     user = get_user(username=token_data.username)
     if user is None:
-        print(f"User not found in database: {token_data.username}")
         raise credentials_exception
-    
-    # Convert UserInDB to User for the response
-    user_data = User(
-        username=user.username,
-        email=user.email,
-        created_at=user.created_at,
-        folders=user.folders
-    )
-    
-    print(f"Authentication successful for user: {user.username}")
-    return user_data
+    return user
 
 # User management functions
 def create_user(user: UserCreate):
