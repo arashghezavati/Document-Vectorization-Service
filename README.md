@@ -1,83 +1,58 @@
-# Document Processing & AI Chatbot Service
+# 📖 AI-Powered Document Processing & Chatbot Service
 
-A powerful Python service that processes documents (PDF, DOCX, TXT, HTML) and makes them searchable and interactive using AI-powered vector embeddings. Built with ChromaDB for efficient vector storage and retrieval, and Google Gemini AI for intelligent response generation.
+This project enables **intelligent document search and chatbot interaction** using **AI-powered embeddings and a fine-tuned LLM**.
 
-Features a simplified UI for document management and an AI agent system powered by LangGraph for complex document processing tasks.
+## 🔹 How It Works:
+✔ **Google Gemini AI** generates **vector embeddings** for document storage & retrieval.  
+✔ **Fine-Tuned LLM (Mistral-7B/Phi-2)** is used for chatbot responses, ensuring **accurate and domain-specific answers**.  
+✔ **Retrieval-Augmented Generation (RAG)** dynamically **retrieves relevant documents** before generating responses.
+
+---
 
 ## 🚀 Features & Benefits
 
-### 📖 AI-Powered Document Search
-- Converts documents into vector embeddings for deep search.
-- Stores and retrieves context-aware information using ChromaDB.
-- Supports PDF, DOCX, TXT, HTML, and more.
+### 📖 AI-Powered Document Search (Google Gemini AI)
+✅ **Smart Semantic Search** – Finds relevant documents **even without exact keyword matches**.  
+✅ **Multi-Format Support** – Works with **PDF, DOCX, TXT, HTML**.  
+✅ **Efficient Storage** – Uses **ChromaDB** to store document embeddings for fast retrieval.  
+✅ **Google Gemini AI for Embeddings** – Converts document text into **vector embeddings** for accurate searching.
 
-### 🤖 AI Chatbot
-- Interactive Chatbot UI – Ask AI about stored business data.
-- Customer-Specific Responses – Query business info, customers, and products.
-- CORS-enabled API – Works seamlessly with frontend and Postman.
+### 🤖 AI Chatbot with Fine-Tuned LLM (Mistral/Phi-2)
+✅ **Fine-Tuned for Accuracy** – Unlike generic models, our chatbot **understands domain-specific knowledge**.  
+✅ **Fewer Hallucinations** – Trained on **real-world business data**, reducing irrelevant responses.  
+✅ **Flexible Model Usage** – Users can **train their own fine-tuned model** and **replace the API endpoint**.
 
 ### 📤 Document & Folder Management
-- Upload documents directly through the simplified UI.
-- Create folders to organize documents.
-- Name documents with custom titles during upload.
-- Assign documents to specific folders.
-- Delete documents and folders as needed.
-- View all documents regardless of folder in the chat interface.
+✅ **Upload & organize documents** into **folders**.  
+✅ **Automatic text extraction** from multiple file formats.  
+✅ **Fast retrieval** with **vector-based search**.  
+✅ **Manage stored data** – Delete, update, and query stored documents easily.
 
-### 🧠 AI Agent with LangGraph
-- Task-based AI agent for complex document operations.
-- Dynamic workflow planning and execution using LangGraph.
-- Natural language task requests (e.g., "Summarize my documents about AI agents").
-- User-specific document access with proper authentication.
-- Document context integration for informed responses.
+---
 
-## 🔹 How It Works
+## 🧠 Fine-Tuning & AI Model Optimization
 
-### 1️⃣ Document Processing & Storage
-```mermaid
-graph LR
-    A[Input Document] --> B[Text Extraction]
-    B --> C[Text Chunking]
-    C --> D[Vector Embedding]
-    D --> E[ChromaDB Storage]
-```
-- Extracts text from PDFs, DOCX, TXT, and HTML.
-- Splits text into manageable chunks.
-- Embeds text using Google Gemini AI.
-- Stores vectors in ChromaDB for fast retrieval.
+### 🔹 Fine-Tuning on Custom Data
+We trained the model using **domain-specific documents** to improve response accuracy and reduce hallucinations. The fine-tuning process includes:  
+✔ **Dataset Curation** – Preparing, cleaning, and structuring custom training data.  
+✔ **Hyperparameter Optimization** – Adjusting batch size, learning rate, and training epochs.  
+✔ **Efficient Training** – Using **LoRA (Low-Rank Adaptation)** to fine-tune **only essential model parameters**.
 
-### 2️⃣ AI Chatbot Interaction
-```mermaid
-graph LR
-    A[User Query] --> B[Retrieve Documents]
-    B --> C[Vector Search in ChromaDB]
-    C --> D[Construct AI Prompt]
-    D --> E[Google Gemini AI Response]
-    E --> F[Chatbot UI]
-```
-- Accepts customer-specific queries or queries across all document categories.
-- Searches stored knowledge for relevant data.
-- Uses Google Gemini AI to generate responses.
+### 🔹 Retrieval-Augmented Generation (RAG)
+✔ **Retrieves relevant documents dynamically** and **generates AI responses based on real-time data**.  
+✔ **Ensures responses are accurate, factual, and context-aware**.
 
-### 3️⃣ AI Agent Workflow
-```mermaid
-graph LR
-    A[User Task Request] --> B[Authentication]
-    B --> C[Plan Creation]
-    C --> D[Document Retrieval]
-    D --> E[Task Execution]
-    E --> F[Response Generation]
-```
-- Processes natural language task requests.
-- Creates a plan for completing the task.
-- Retrieves relevant documents from the user's collection.
-- Executes the task using document context.
-- Generates a comprehensive response.
+### 🔹 Model Distillation & Inference Optimization
+✔ **Model Distillation** – Trained a **lighter model version** for **faster responses**.  
+✔ **Inference Optimization** – Implemented **quantization techniques** to reduce memory usage.  
+✔ **Batch Processing & Caching** – **Faster query processing** for improved efficiency.
 
-## ⚡ Quick Start Guide
+---
+
+## 🔧 Quick Start Guide
 
 ### 1️⃣ Clone & Setup
-```sh
+```bash
 # Clone the repository
 git clone https://github.com/arashghezavati/Document-Vectorization-Service.git
 cd Document-Vectorization-Service
@@ -89,70 +64,67 @@ source venv/bin/activate  # Linux/Mac
 
 # Install dependencies
 pip install -r python-services/requirements.txt
-```
 
-### 2️⃣ Configure API Keys
-Create a `.env` file in the root directory with the following content:
-```
-GOOGLE_GEMINI_API_KEY=your_api_key_here
-GEMINI_MODEL=gemini-2.0-flash
-JWT_SECRET_KEY=your_jwt_secret_key
-EMBEDDING_DIMENSION=768
+2️⃣ Configure API Keys & Environment Variables
+Create a .env file in the root directory:
+
+ini
+Copy
+Edit
+# Google Gemini for Document Embeddings
+GOOGLE_GEMINI_API_KEY=your_gemini_api_key
 EMBEDDING_MODEL=text-embedding-004
-```
+EMBEDDING_DIMENSION=768
 
-### 3️⃣ Start the AI Chatbot API
-Run the FastAPI backend to enable chatbot functionality:
-```sh
-# Make sure you're in the python-services directory
+# Fine-Tuned LLM API (For Chatbot)
+LLM_API_ENDPOINT=https://your-fine-tuned-model.com/api
+LLM_API_KEY=your_fine_tuned_model_api_key
+
+# ChromaDB Storage
+CHROMADB_PATH=./vector-database/store
+3️⃣ Train Your Own Fine-Tuned Model (Optional)
+To fine-tune the LLM on your own dataset, use:
+
+bash
+Copy
+Edit
+cd fine-tuning
+python fine_tune.py
+Fine-tuned models will be saved in: ./fine-tuning/models/
+
+After training, upload the fine-tuned model and update .env with the new API URL.
+
+📢 AI Chatbot API
+Start the FastAPI Server
+bash
+Copy
+Edit
 cd python-services
-
-# Start the API server
 python run_server.py
-```
+API Base URL: http://localhost:8000
+Swagger API Docs: http://localhost:8000/docs
 
-- Backend URL: http://localhost:8000
-- API Docs: http://localhost:8000/docs
+Example API Request (Chatbot Query)
+bash
+Copy
+Edit
+curl -X POST "http://localhost:8000/chat" \
+     -H "Content-Type: application/json" \
+     -H "Authorization: Bearer YOUR_TOKEN" \
+     -d '{"query": "What is the CRS score required for Canada PR?", "mode": "strict"}'
+🔧 Technical Stack
+Backend: FastAPI, ChromaDB
+Document Embeddings: Google Gemini API
+Chatbot: Fine-Tuned Mistral-7B / Phi-2 (Custom API)
+Retrieval-Augmented Generation (RAG) – Real-time document retrieval for AI responses.
+Fine-Tuning Techniques: LoRA, Model Distillation, Quantization.
+Document Processing: PyPDF2, python-docx, BeautifulSoup.
+🤝 Contributing
+✔ Fork the repository
+✔ Create a feature branch (git checkout -b feature/new-feature)
+✔ Commit your changes (git commit -m 'Added feature')
+✔ Push to branch (git push origin feature/new-feature)
+✔ Open a Pull Request
 
-### 4️⃣ Open the Application UI
-- Open `http://localhost:3000` in your browser.
-- Register or log in to your account.
-- Navigate through the simplified interface:
-  - **Dashboard**: Overview of your documents and folders.
-  - **Documents**: Create folders and upload documents.
-  - **Chat**: Interact with the AI chatbot about your documents.
-  - **Tasks**: Submit complex tasks to the AI agent.
-
-### 5️⃣ Working with Documents
-- Create folders to organize your documents.
-- Upload documents with custom names and assign them to folders.
-- All documents will be available in the chat interface regardless of folder.
-- Use the document filter in chat to focus on specific documents.
-
-### 6️⃣ Using the AI Agent
-- Navigate to the Tasks tab.
-- Enter a natural language task request (e.g., "Summarize my documents about AI agents").
-- The agent will process your request, retrieve relevant documents, and generate a response.
-
-## 🔧 Technical Stack
-
-- **Backend**: FastAPI, ChromaDB, LangGraph
-- **AI**: Google Gemini API
-- **Frontend**: React.js
-- **Authentication**: JWT-based authentication
-- **Database**: ChromaDB for vector storage
-- **Document Processing**: PyPDF2, python-docx, BeautifulSoup
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📩 Support
-
-For support, please open an issue in the GitHub repository or contact the maintainers directly.
+📩 Support
+For issues, open a GitHub issue or contact the maintainers.
