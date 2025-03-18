@@ -1,105 +1,50 @@
-# import os
-# import chromadb
-# from dotenv import load_dotenv
-# from embedding_function import GeminiEmbeddingFunction
-
-# def query_collection(query_text, collection_name="default", n_results=5):
-#     """Query a collection in ChromaDB.
-    
-#     Args:
-#         query_text (str): Text to search for
-#         collection_name (str): Name of collection to search in
-#         n_results (int): Number of results to return
-#     """
-#     # Load environment variables
-#     load_dotenv()
-#     api_key = os.getenv('GOOGLE_GEMINI_API_KEY')
-    
-#     # Initialize ChromaDB
-#     db_path = os.path.join(os.path.dirname(__file__), '..', 'vector-database', 'store')
-#     chroma_client = chromadb.PersistentClient(path=db_path)
-    
-#     # Create embedding function
-#     embedding_model = GeminiEmbeddingFunction(api_key=api_key)
-    
-#     try:
-#         # Get collection
-#         collection = chroma_client.get_collection(
-#             name=collection_name,
-#             embedding_function=embedding_model
-#         )
-        
-#         # Query the collection
-#         results = collection.query(
-#             query_texts=[query_text],
-#             n_results=n_results
-#         )
-        
-#         # Print results
-#         print(f"\n🔍 Results for query: '{query_text}' in collection '{collection_name}'")
-#         print("=" * 80)
-        
-#         for i, (doc, distance) in enumerate(zip(results['documents'][0], results['distances'][0])):
-#             similarity = 1 - distance  # Convert distance to similarity score
-#             print(f"\n📄 Result {i+1} (Similarity: {similarity:.2%}):")
-#             print("-" * 40)
-#             print(doc)
-            
-#     except Exception as e:
-#         print(f"❌ Error querying collection: {str(e)}")
-
-# if __name__ == "__main__":
-#     import sys
-#     if len(sys.argv) < 2:
-#         print("Usage: python query_documents.py <query_text> [collection_name] [n_results]")
-#         sys.exit(1)
-    
-#     query_text = sys.argv[1]
-#     collection_name = sys.argv[2] if len(sys.argv) > 2 else "default"
-#     n_results = int(sys.argv[3]) if len(sys.argv) > 3 else 5
-    
-#     query_collection(query_text, collection_name, n_results)
-
 import os
 import chromadb
-import google.generativeai as genai
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
 import time
 from dotenv import load_dotenv
-from embedding_function import GeminiEmbeddingFunction
+from embedding_function import GeminiEmbeddingFunction  # Keep this for retrieval
 
+# ✅ Load environment variables
+load_dotenv()
+
+# ✅ Load fine-tuned model
+MODEL_PATH = os.getenv("FINETUNED_MODEL_PATH", "./phi-2-finetuned")
+
+device = "cuda" if torch.cuda.is_available() else "cpu"
+tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
+model = AutoModelForCausalLM.from_pretrained(MODEL_PATH).to(device)
+
+# ✅ Function to get all collections from ChromaDB
 def get_all_collections(chroma_client):
-    """Retrieve a list of all available collections in the vector database."""
     try:
         return [col.name for col in chroma_client.list_collections()]
     except Exception as e:
         print(f"❌ Error fetching collections: {str(e)}")
         return []
 
+# ✅ Function to get total documents in a collection
 def get_total_documents(collection):
-    """Get the total number of documents in a collection."""
     try:
-        return max(1, collection.count())  # Ensure at least 1 document is used
+        return max(1, collection.count())  # Ensure at least 1 document
     except Exception as e:
         print(f"⚠ Error counting documents: {str(e)}")
         return 1
 
+# ✅ Retrieve relevant documents from vector database
 def retrieve_documents(query_text, collection_name=None):
-    """Retrieve all documents from a specific collection or all available collections."""
-    load_dotenv()
-    api_key = os.getenv('GOOGLE_GEMINI_API_KEY')
-
     db_path = os.path.join(os.path.dirname(__file__), '..', 'vector-database', 'store')
     chroma_client = chromadb.PersistentClient(path=db_path)
-    embedding_model = GeminiEmbeddingFunction(api_key=api_key)
+
+    embedding_model = GeminiEmbeddingFunction(api_key=os.getenv("GOOGLE_GEMINI_API_KEY"))  # Keep this for retrieval
 
     retrieved_docs = []
 
     try:
         if collection_name and collection_name.lower() != "all":
-            # Search in a specific collection
             collections = [chroma_client.get_collection(name=collection_name, embedding_function=embedding_model)]
         else:
-            # Search in ALL available collections
             all_collections = get_all_collections(chroma_client)
             if not all_collections:
                 print("⚠ No collections found in the database.")
@@ -122,26 +67,16 @@ def retrieve_documents(query_text, collection_name=None):
         print(f"❌ Error querying collection: {str(e)}")
         return []
 
-def generate_response_gemini(prompt):
-    """Generate a response using the Gemini API with retry logic."""
-    load_dotenv()
-    api_key = os.getenv("GOOGLE_GEMINI_API_KEY")
-    model_name = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+# ✅ Generate response using fine-tuned model
+def generate_response_finetuned(prompt):
+    inputs = tokenizer(prompt, return_tensors="pt", padding=True, truncation=True).to(device)
 
-    genai.configure(api_key=api_key)
+    with torch.no_grad():
+        output = model.generate(**inputs, max_new_tokens=200)
+    
+    return tokenizer.decode(output[0], skip_special_tokens=True)
 
-    retries = 3
-    for attempt in range(retries):
-        try:
-            model = genai.GenerativeModel(model_name)
-            response = model.generate_content(prompt)
-            return response.text
-        except Exception as e:
-            print(f"⚠ Error generating AI response (Attempt {attempt+1}): {str(e)}")
-            time.sleep(2 ** attempt)  # Exponential backoff
-
-    return "⚠ Unable to generate AI-enhanced response after multiple attempts."
-
+# ✅ Query documents and generate AI response
 def query_collection(query_text, collection_name=None, mode="strict"):
     retrieved_docs = retrieve_documents(query_text, collection_name)
 
@@ -151,14 +86,12 @@ def query_collection(query_text, collection_name=None, mode="strict"):
 
     document_context = "\n\n".join([doc[0] for doc in retrieved_docs])
 
-    response = (
-        generate_response_gemini(f"Here are relevant documents:\n\n{document_context}\n\nNow answer: {query_text}")
-        if mode == "comprehensive"
-        else f"Based on the following documents, answer: '{query_text}'\n\n{document_context}"
-    )
+    # ✅ Use fine-tuned model for response generation
+    response = generate_response_finetuned(f"Here are relevant documents:\n\n{document_context}\n\nNow answer: {query_text}")
 
     print("\n🤖 AI Response:\n", response)
 
+# ✅ CLI Entry Point
 if __name__ == "__main__":
     import sys
     if len(sys.argv) < 2:
