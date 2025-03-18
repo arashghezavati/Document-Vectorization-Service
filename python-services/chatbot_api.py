@@ -406,8 +406,11 @@ async def chat(
     # Construct AI prompt ensuring NO introduction text
     prompt = (
         f"{customer_data}\n\n"
-        f"Answer concisely and directly based on the provided data. Do NOT include introductions or explanations. "
+    #     f"Answer concisely and directly based on the provided data. Do NOT include introductions or explanations. "
+    #    f"Just return the response for the following request:\n\n"
+          f"Answer concisely and directly based on the provided data in a good an professional manner. "
         f"Just return the response for the following request:\n\n"
+          f"you are a helpful assistant. "
         f"Query: {query}"
     )
 
