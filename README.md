@@ -2,7 +2,10 @@
 
 This project enables **intelligent document search and chatbot interaction** using **AI-powered embeddings and a fine-tuned LLM**.
 
+---
+
 ## 🔹 How It Works:
+
 ✔ **Google Gemini AI** generates **vector embeddings** for document storage & retrieval.  
 ✔ **Fine-Tuned LLM (Mistral-7B/Phi-2)** is used for chatbot responses, ensuring **accurate and domain-specific answers**.  
 ✔ **Retrieval-Augmented Generation (RAG)** dynamically **retrieves relevant documents** before generating responses.
@@ -12,18 +15,25 @@ This project enables **intelligent document search and chatbot interaction** usi
 ## 🚀 Features & Benefits
 
 ### 📖 AI-Powered Document Search (Google Gemini AI)
+
 ✅ **Smart Semantic Search** – Finds relevant documents **even without exact keyword matches**.  
 ✅ **Multi-Format Support** – Works with **PDF, DOCX, TXT, HTML**.  
 ✅ **Fast Retrieval** – Uses **ChromaDB** for vector-based document indexing.  
 
+---
+
 ### 🤖 AI Chatbot (Fine-Tuned LLM)
+
 ✅ **Fine-Tuned LLM Integration** – Trained on **custom business data** for domain-specific accuracy.  
 ✅ **User-Specific Responses** – Chatbot provides answers based on **retrieved documents**.  
 ✅ **Two AI Modes**:  
-   - **Google Gemini AI**: Used for **vector embeddings & document retrieval**.  
-   - **Fine-Tuned LLM**: Used for **chatbot responses with improved accuracy**.
+    - **Google Gemini AI**: Used for **vector embeddings & document retrieval**.  
+    - **Fine-Tuned LLM**: Used for **chatbot responses with improved accuracy**.
+
+---
 
 ### 📤 Document & Folder Management
+
 ✅ **Upload Documents** via a simple UI.  
 ✅ **Organize Documents** into folders.  
 ✅ **Custom Document Names** during upload.  
@@ -32,6 +42,7 @@ This project enables **intelligent document search and chatbot interaction** usi
 ---
 
 ## 🔧 Fine-Tuning on Custom Data (Mistral-7B/Phi-2)
+
 The chatbot **uses a fine-tuned model** instead of generic AI responses to improve accuracy.  
 The fine-tuning process includes:
 
@@ -39,16 +50,25 @@ The fine-tuning process includes:
 ✔ **Hyperparameter Optimization** – Adjusting batch size, learning rate, and training epochs.  
 ✔ **Efficient Training** – Using **LoRA (Low-Rank Adaptation)** to fine-tune only essential model parameters.
 
+---
+
 ### 🔹 Retrieval-Augmented Generation (RAG)
+
 The chatbot **retrieves documents dynamically** and generates responses **based on real-time data**, improving accuracy and relevance.
 
+---
+
 ### 🔹 Model Distillation & Inference Optimization
+
 ✔ **Model Distillation** – Trained a **lighter version** of the model for faster responses.  
 ✔ **Inference Optimization** – Implemented **quantization** to reduce memory usage.  
 ✔ **Batch Processing & Caching** – Optimized **query efficiency**.
 
+---
+
 ### 🔹 Use Your Own Fine-Tuned Model
-- The **fine-tuning code is included** in this repo.
+
+- The **fine-tuning code is included** in this repo.  
 - You can **train a custom model**, upload it, and **replace the API key** to integrate your own fine-tuned LLM.
 
 ---
@@ -56,6 +76,7 @@ The chatbot **retrieves documents dynamically** and generates responses **based 
 ## ⚡ Quick Start Guide
 
 ### 1️⃣ Clone & Setup
+
 ```sh
 # Clone the repository
 git clone https://github.com/arashghezavati/Document-Vectorization-Service.git
@@ -68,12 +89,15 @@ source venv/bin/activate  # Linux/Mac
 
 # Install dependencies
 pip install -r python-services/requirements.txt
-2️⃣ Configure API Keys & Fine-Tuned Model
-Create a .env file in the root directory and add the following:
+```
 
-sh
-Copy
-Edit
+---
+
+### 2️⃣ Configure API Keys & Fine-Tuned Model
+
+Create a `.env` file in the root directory and add the following:
+
+```env
 GOOGLE_GEMINI_API_KEY=your_gemini_api_key
 GEMINI_MODEL=gemini-2.0-flash
 
@@ -82,43 +106,59 @@ FINE_TUNED_LLM_MODEL_NAME=mistral-7B-finetuned
 JWT_SECRET_KEY=your_jwt_secret_key
 EMBEDDING_DIMENSION=768
 EMBEDDING_MODEL=text-embedding-004
+```
+
 If you're using your own fine-tuned model, upload it and replace the API endpoint.
 
-3️⃣ Start the AI Chatbot API
-sh
-Copy
-Edit
+---
+
+### 3️⃣ Start the AI Chatbot API
+
+```sh
 # Navigate to the python-services directory
 cd python-services
 
 # Start the FastAPI server
 python run_server.py
-📌 Backend URL: http://localhost:8000
-📌 API Docs: http://localhost:8000/docs
-4️⃣ Open the Application UI
-Open http://localhost:3000 in your browser.
-Register or log in to your account.
-Navigate through the interface:
-Dashboard: Overview of documents.
-Documents: Upload & manage files.
-Chat: Ask AI about stored business data.
-🏗 Fine-Tuning Your Own Model
+```
+
+📌 Backend URL: `http://localhost:8000`  
+📌 API Docs: `http://localhost:8000/docs`
+
+---
+
+### 4️⃣ Open the Application UI
+
+1. Open `http://localhost:3000` in your browser.  
+2. Register or log in to your account.  
+3. Navigate through the interface:  
+    - **Dashboard**: Overview of documents.  
+    - **Documents**: Upload & manage files.  
+    - **Chat**: Ask AI about stored business data.
+
+---
+
+## 🏗 Fine-Tuning Your Own Model
+
 If you want to fine-tune a new model, follow these steps:
 
-1️⃣ Prepare Training Data
-Store your training data as a CSV or JSON file inside fine-tuning/.
+### 1️⃣ Prepare Training Data
+
+Store your training data as a CSV or JSON file inside `fine-tuning/`.  
 Example structure:
-json
-Copy
-Edit
+
+```json
 [
   {"text": "How does Express Entry work in Canada?"},
   {"text": "Explain the steps for applying for a visa."}
 ]
-2️⃣ Train a New Model
-sh
-Copy
-Edit
+```
+
+---
+
+### 2️⃣ Train a New Model
+
+```sh
 cd fine-tuning
 
 # Install fine-tuning dependencies
@@ -126,39 +166,67 @@ pip install -r requirements.txt
 
 # Start training (Adjust hyperparameters in fine_tune.py)
 python fine_tune.py
-The model will be saved in fine-tuning/your-fine-tuned-model.
-3️⃣ Deploy the Fine-Tuned Model
-Upload the model to a hosting service (Hugging Face, AWS, etc.).
-Replace FINE_TUNED_LLM_API in .env with your API endpoint.
-📚 Use Cases
-🔹 Business Knowledge Management
-✔ Store internal company documents and search instantly.
+```
+
+The model will be saved in `fine-tuning/your-fine-tuned-model`.
+
+---
+
+### 3️⃣ Deploy the Fine-Tuned Model
+
+1. Upload the model to a hosting service (Hugging Face, AWS, etc.).  
+2. Replace `FINE_TUNED_LLM_API` in `.env` with your API endpoint.
+
+---
+
+## 📚 Use Cases
+
+### 🔹 Business Knowledge Management
+
+✔ Store internal company documents and search instantly.  
 ✔ Employees can ask AI about policies, reports, and more.
 
-🔹 Legal & Compliance
-✔ Quickly retrieve legal documents, case studies, and contracts.
+---
+
+### 🔹 Legal & Compliance
+
+✔ Quickly retrieve legal documents, case studies, and contracts.  
 ✔ Get AI-powered summaries for faster decision-making.
 
-🔹 Customer Support Automation
-✔ Automate responses by searching FAQs & knowledge bases.
+---
+
+### 🔹 Customer Support Automation
+
+✔ Automate responses by searching FAQs & knowledge bases.  
 ✔ Reduce manual support workload.
 
-🛠 Technical Stack
-Component	Technology Used
-Backend	FastAPI, ChromaDB
-AI Models	Google Gemini API, Fine-Tuned LLM (Mistral-7B/Phi-2)
-Frontend	React.js
-Auth	JWT-based authentication
-Storage	ChromaDB (Vector Database)
-Processing	PyPDF2, python-docx, BeautifulSoup
-🤝 Contributing
+---
+
+## 🛠 Technical Stack
+
+| Component       | Technology Used                          |
+|------------------|------------------------------------------|
+| **Backend**      | FastAPI, ChromaDB                       |
+| **AI Models**    | Google Gemini API, Fine-Tuned LLM       |
+| **Frontend**     | React.js                                |
+| **Auth**         | JWT-based authentication                |
+| **Storage**      | ChromaDB (Vector Database)              |
+| **Processing**   | PyPDF2, python-docx, BeautifulSoup      |
+
+---
+
+## 🤝 Contributing
+
 We welcome contributions! To contribute:
 
-1️⃣ Fork the repository
-2️⃣ Create a feature branch (git checkout -b feature/your-feature)
-3️⃣ Commit your changes (git commit -m "Add new feature")
-4️⃣ Push to the branch (git push origin feature/your-feature)
-5️⃣ Open a Pull Request
+1️⃣ Fork the repository  
+2️⃣ Create a feature branch (`git checkout -b feature/your-feature`)  
+3️⃣ Commit your changes (`git commit -m "Add new feature"`)  
+4️⃣ Push to the branch (`git push origin feature/your-feature`)  
+5️⃣ Open a Pull Request  
 
-📩 Support
+---
+
+## 📩 Support
+
 For support, please open an issue in the GitHub repository or contact the maintainers directly.
