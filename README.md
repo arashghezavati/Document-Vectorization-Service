@@ -1,6 +1,5 @@
 # 📖 AI-Powered Document Processing & Chatbot Service
-
-This project enables **intelligent document search and chatbot interaction** using **AI-powered embeddings and a fine-tuned LLM**.
+The system allows users to upload documents, perform AI-powered searches, and receive intelligent insights. It enhances document retrieval by providing accurate, context-aware responses using fine-tuned AI models, making it easy to find relevant information quickly and efficiently.
 
 ---
 
