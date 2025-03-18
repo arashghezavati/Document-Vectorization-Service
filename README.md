@@ -12,35 +12,6 @@ This project enables **intelligent document search and chatbot interaction** usi
 ## 🚀 Features & Benefits
 
 ### 📖 AI-Powered Document Search (Google Gemini AI)
-✅ **Smart Semantic Search
-
-
-
-
-
-
-You said:
-give me the readme.md
-ChatGPT said:
-Here is the full README.md in GitHub-ready format with structured sections, proper integration of fine-tuning details, and a clear explanation of how the project works.
-
-md
-Copy
-Edit
-# 📖 AI-Powered Document Processing & Chatbot Service
-
-This project enables **intelligent document search and chatbot interaction** using **AI-powered embeddings and a fine-tuned LLM**.
-
-## 🔹 How It Works:
-✔ **Google Gemini AI** generates **vector embeddings** for document storage & retrieval.  
-✔ **Fine-Tuned LLM (Mistral-7B/Phi-2)** is used for chatbot responses, ensuring **accurate and domain-specific answers**.  
-✔ **Retrieval-Augmented Generation (RAG)** dynamically **retrieves relevant documents** before generating responses.
-
----
-
-## 🚀 Features & Benefits
-
-### 📖 AI-Powered Document Search (Google Gemini AI)
 ✅ **Smart Semantic Search** – Finds relevant documents **even without exact keyword matches**.  
 ✅ **Multi-Format Support** – Works with **PDF, DOCX, TXT, HTML**.  
 ✅ **Fast Retrieval** – Uses **ChromaDB** for vector-based document indexing.  
