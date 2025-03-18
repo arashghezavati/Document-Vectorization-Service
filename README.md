@@ -11,6 +11,58 @@ The system allows users to upload documents, perform AI-powered searches, and re
 
 ---
 
+## 🛠 System Architecture
+
+Below is a high-level architecture diagram of the system:
+
+```mermaid
+flowchart TD
+    subgraph User
+        A[User Interface] -->|Uploads Documents| B[Backend API]
+        A -->|Asks Questions| B
+    end
+
+    subgraph Backend
+        B -->|Stores Documents| C[ChromaDB]
+        B -->|Fetches Documents| C
+        B -->|Generates Embeddings| D[Google Gemini API]
+        B -->|Generates Responses| E[Fine-Tuned LLM]
+    end
+
+    subgraph Storage
+        C -->|Indexes Vectors| F[Vector Database]
+    end
+```
+
+---
+
+## 🔄 Workflow Diagram
+
+The following diagram illustrates the workflow for document processing and chatbot interaction:
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant Backend
+    participant ChromaDB
+    participant AI
+
+    User->>Frontend: Upload Document
+    Frontend->>Backend: Send Document
+    Backend->>ChromaDB: Store Document Embeddings
+    Backend->>AI: Generate Embeddings (Google Gemini)
+    User->>Frontend: Ask Question
+    Frontend->>Backend: Send Query
+    Backend->>ChromaDB: Retrieve Relevant Documents
+    Backend->>AI: Generate Response (Fine-Tuned LLM)
+    AI->>Backend: Return Response
+    Backend->>Frontend: Send Response
+    Frontend->>User: Display Answer
+```
+
+---
+
 ## 🚀 Features & Benefits
 
 ### 📖 AI-Powered Document Search (Google Gemini AI)
