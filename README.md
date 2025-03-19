@@ -1,4 +1,5 @@
 # 📖 AI-Powered Document Processing & Chatbot Service
+
 The system allows users to upload documents, perform AI-powered searches, and receive intelligent insights. It enhances document retrieval by providing accurate, context-aware responses using fine-tuned AI models, making it easy to find relevant information quickly and efficiently.
 
 ---
@@ -69,7 +70,7 @@ sequenceDiagram
 
 ✅ **Smart Semantic Search** – Finds relevant documents **even without exact keyword matches**.  
 ✅ **Multi-Format Support** – Works with **PDF, DOCX, TXT, HTML**.  
-✅ **Fast Retrieval** – Uses **ChromaDB** for vector-based document indexing.  
+✅ **Fast Retrieval** – Uses **ChromaDB** for vector-based document indexing.
 
 ---
 
@@ -78,8 +79,8 @@ sequenceDiagram
 ✅ **Fine-Tuned LLM Integration** – Trained on **custom business data** for domain-specific accuracy.  
 ✅ **User-Specific Responses** – Chatbot provides answers based on **retrieved documents**.  
 ✅ **Two AI Modes**:  
-    - **Google Gemini AI**: Used for **vector embeddings & document retrieval**.  
-    - **Fine-Tuned LLM**: Used for **chatbot responses with improved accuracy**.
+ - **Google Gemini AI**: Used for **vector embeddings & document retrieval**.  
+ - **Fine-Tuned LLM**: Used for **chatbot responses with improved accuracy**.
 
 ---
 
@@ -88,7 +89,7 @@ sequenceDiagram
 ✅ **Upload Documents** via a simple UI.  
 ✅ **Organize Documents** into folders.  
 ✅ **Custom Document Names** during upload.  
-✅ **Delete & Manage** documents as needed.  
+✅ **Delete & Manage** documents as needed.
 
 ---
 
@@ -119,7 +120,7 @@ The chatbot **retrieves documents dynamically** and generates responses **based 
 
 ### 🔹 Use Your Own Fine-Tuned Model
 
-- The **fine-tuning code is included** in this repo.  
+- The **fine-tuning code is included** in this repo.
 - You can **train a custom model**, upload it, and **replace the API key** to integrate your own fine-tuned LLM.
 
 ---
@@ -180,12 +181,12 @@ python run_server.py
 
 ### 4️⃣ Open the Application UI
 
-1. Open `http://localhost:3000` in your browser.  
-2. Register or log in to your account.  
-3. Navigate through the interface:  
-    - **Dashboard**: Overview of documents.  
-    - **Documents**: Upload & manage files.  
-    - **Chat**: Ask AI about stored business data.
+1. Open `http://localhost:3000` in your browser.
+2. Register or log in to your account.
+3. Navigate through the interface:
+   - **Dashboard**: Overview of documents.
+   - **Documents**: Upload & manage files.
+   - **Chat**: Ask AI about stored business data.
 
 ---
 
@@ -200,8 +201,8 @@ Example structure:
 
 ```json
 [
-  {"text": "How does Express Entry work in Canada?"},
-  {"text": "Explain the steps for applying for a visa."}
+  { "text": "How does Express Entry work in Canada?" },
+  { "text": "Explain the steps for applying for a visa." }
 ]
 ```
 
@@ -225,7 +226,7 @@ The model will be saved in `fine-tuning/your-fine-tuned-model`.
 
 ### 3️⃣ Deploy the Fine-Tuned Model
 
-1. Upload the model to a hosting service (Hugging Face, AWS, etc.).  
+1. Upload the model to a hosting service (Hugging Face, AWS, etc.).
 2. Replace `FINE_TUNED_LLM_API` in `.env` with your API endpoint.
 
 ---
@@ -255,14 +256,14 @@ The model will be saved in `fine-tuning/your-fine-tuned-model`.
 
 ## 🛠 Technical Stack
 
-| Component       | Technology Used                          |
-|------------------|------------------------------------------|
-| **Backend**      | FastAPI, ChromaDB                       |
-| **AI Models**    | Google Gemini API, Fine-Tuned LLM       |
-| **Frontend**     | React.js                                |
-| **Auth**         | JWT-based authentication                |
-| **Storage**      | ChromaDB (Vector Database)              |
-| **Processing**   | PyPDF2, python-docx, BeautifulSoup      |
+| Component      | Technology Used                    |
+| -------------- | ---------------------------------- |
+| **Backend**    | FastAPI, ChromaDB                  |
+| **AI Models**  | Google Gemini API, Fine-Tuned LLM  |
+| **Frontend**   | React.js                           |
+| **Auth**       | JWT-based authentication           |
+| **Storage**    | ChromaDB (Vector Database)         |
+| **Processing** | PyPDF2, python-docx, BeautifulSoup |
 
 ---
 
@@ -274,7 +275,7 @@ We welcome contributions! To contribute:
 2️⃣ Create a feature branch (`git checkout -b feature/your-feature`)  
 3️⃣ Commit your changes (`git commit -m "Add new feature"`)  
 4️⃣ Push to the branch (`git push origin feature/your-feature`)  
-5️⃣ Open a Pull Request  
+5️⃣ Open a Pull Request
 
 ---
 
